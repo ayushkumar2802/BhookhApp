@@ -34,6 +34,10 @@
 - Error messages guide users in case of network issues or API failures.
 
 ## Screenshots 📸
+- Login Screen
+![Loading Screen](loginss.png)
+- Home Page
+![Home Page](home1ss.png)
 
 
 ## Tech Stack 🛠️
@@ -45,5 +49,5 @@
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/bhookh.git
+   git clone https://github.com/ayushkumar2802/bhookh.git
    cd bhookh
