@@ -36,6 +36,7 @@
 ## Screenshots 📸
 - Login Screen
 ![Loading Screen](loginss.png)
+<hr>
 - Home Page
 ![Home Page](home1ss.png)
 
