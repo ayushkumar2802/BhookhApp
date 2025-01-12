@@ -34,10 +34,10 @@
 - Error messages guide users in case of network issues or API failures.
 
 ## Screenshots 📸
-- Login Screen
 ![Loading Screen](loginss.png)
+
 <hr>
-- Home Page
+
 ![Home Page](home1ss.png)
 
 
