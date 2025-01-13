@@ -1,16 +1,116 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   Image,
   TextInput,
   TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
   StyleSheet,
-  Alert,
 } from 'react-native';
+import axios from 'axios';
+
+
+interface HomeScreenProps {
+  username?: string;
+}
+
+interface Recipe {
+  image?: string;
+  title?: string;
+  description?: string;
+}
+
+const HomeScreen: React.FC<HomeScreenProps> = ({ username }) => {
+  const [recipes, setRecipes] = useState<Recipe[]>([]); 
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null); // Track selected recipe
+
+  const fetchRecipes = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.get('https://dummyjson.com/recipes');
+      setRecipes(response.data.recipes);
+    } catch (err) {
+      setError('Failed to load recipes. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecipes();
+  }, []);
+
+  const handleRecipeClick = (item: Recipe) => {
+    setSelectedRecipe(selectedRecipe === item ? null : item);
+  };
+
+  return (
+    <View style={styles.homeContainer}>
+      <Text style={styles.greetingText}>Hello, {username || 'Guest'}</Text>
+      <Text style={styles.subGreetingText}>What do you want to eat?</Text>
+
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search"
+        placeholderTextColor="#aaa"
+      />
+
+      <View style={styles.categoriesContainer}>
+        <View style={styles.category}>
+          <Text>🍕</Text>
+          <Text style={styles.categoryText}>Lunch</Text>
+        </View>
+        <View style={styles.category}>
+          <Text>🥗</Text>
+          <Text style={styles.categoryText}>Dinner</Text>
+        </View>
+        <View style={styles.category}>
+          <Text>🥐</Text>
+          <Text style={styles.categoryText}>Breakfast</Text>
+        </View>
+        <View style={styles.category}>
+          <Text>🍦</Text>
+          <Text style={styles.categoryText}>Dessert</Text>
+        </View>
+      </View>
+
+      {isLoading && <ActivityIndicator size="large" color="#0000ff" />}
+      {error && <Text style={styles.errorText}>{error}</Text>}
+
+      <FlatList
+        data={recipes}
+        keyExtractor={(item, index) => index.toString()} 
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => handleRecipeClick(item)}>
+            <View style={styles.recipeCard}>
+              <Image
+                source={{
+                  uri: item?.image || 'https:/cdn.dummyjson.com/recipe-images/1.webp', 
+                }}
+                style={styles.recipeImage}
+                onError={(e) => console.log('Image Load Error:', e.nativeEvent.error)} 
+              />
+              <Text style={styles.recipeTitle}>{item?.title || 'Food Menu'}</Text>
+
+              {selectedRecipe === item && (
+                <Text style={styles.recipeDesc}>{item?.description || 'Item is not available this time'}</Text>
+              )}
+            </View>
+          </TouchableOpacity>
+        )}
+      />
+    </View>
+  );
+};
 
 const App = () => {
-  const [currentScreen, setCurrentScreen] = useState<{ screen: string; username: string | null }>({ screen: 'Login', username: null });
+  const [currentScreen, setCurrentScreen] = useState({ screen: 'Login', username: '' });
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -34,26 +134,18 @@ const App = () => {
 
     if (userExists) {
       setError('');
-      setCurrentScreen({ screen: 'Home', username });
+      setCurrentScreen({ screen: 'Home', username }); 
     } else {
       setError('Invalid credentials');
     }
   };
 
-
   return currentScreen.screen === 'Login' ? (
     <View style={styles.container}>
-      {/* Logo Image */}
-      <Image
-        source={require('./assets/logoimg.png')}
-        style={styles.logo}
-      />
-
-      {/* Welcome Text */}
+      <Image source={require('./assets/logoimg.png')} style={styles.logo} />
       <Text style={styles.welcomeText}>Welcome back!</Text>
       <Text style={styles.subText}>Log in to your existing account</Text>
 
-      {/* Username Input */}
       <TextInput
         style={styles.input}
         placeholder="Username"
@@ -62,7 +154,6 @@ const App = () => {
         onChangeText={setUsername}
       />
 
-      {/* Password Input */}
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -72,20 +163,16 @@ const App = () => {
         onChangeText={setPassword}
       />
 
-      {/* Error Message */}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      {/* Login Button */}
       <TouchableOpacity style={styles.loginButton} onPress={validateLogin}>
         <Text style={styles.loginButtonText}>LOG IN</Text>
       </TouchableOpacity>
 
-      {/* Forget Password */}
       <TouchableOpacity>
         <Text style={styles.forgotPassword}>Forget Password?</Text>
       </TouchableOpacity>
 
-      {/* Connect Using */}
       <Text style={styles.orConnectText}>Or connect using</Text>
       <View style={styles.socialContainer}>
         <TouchableOpacity style={styles.socialButton}>
@@ -96,67 +183,12 @@ const App = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Sign Up */}
       <Text style={styles.signUpText}>
         Don’t have an account? <Text style={styles.signUpLink}>Sign Up</Text>
       </Text>
     </View>
   ) : (
     <HomeScreen username={currentScreen.username} />
-  );
-};
-
-const HomeScreen = ({ username }: { username: string | null }) => {
-  return (
-    <View style={styles.homeContainer}>
-      <Text style={styles.greetingText}>Hello, {username || 'Guest'}</Text>
-      <Text style={styles.subGreetingText}>What do you want to eat?</Text>
-
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search"
-        placeholderTextColor="#aaa"
-      />
-
-      const [recipes, setRecipes] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-      <View style={styles.categoriesContainer}>
-        <View style={styles.category}>
-          <Text>🍕</Text>
-          <Text style={styles.categoryText}>Lunch</Text>
-        </View>
-        <View style={styles.category}>
-          <Text>🥗</Text>
-          <Text style={styles.categoryText}>Dinner</Text>
-        </View>
-        <View style={styles.category}>
-          <Text>🥐</Text>
-          <Text style={styles.categoryText}>Breakfast</Text>
-        </View>
-        <View style={styles.category}>
-          <Text>🍦</Text>
-          <Text style={styles.categoryText}>Dessert</Text>
-        </View>
-      </View>
-
-      <View style={styles.specialContainer}>
-        <Text style={styles.sectionTitle}>Today's special</Text>
-        <View style={styles.specialItemsContainer}>
-          <View style={styles.specialItem}>
-            <Text style={styles.itemName}>Vegan Chickpea Curry</Text>
-            <Text style={styles.itemDesc}>Loaded with protein</Text>
-            <Text style={styles.itemPrice}>₹150</Text>
-          </View>
-          <View style={styles.specialItem}>
-            <Text style={styles.itemName}>Carrot Chickpea Salad</Text>
-            <Text style={styles.itemDesc}>Carrots lend an earthy note</Text>
-            <Text style={styles.itemPrice}>₹250</Text>
-          </View>
-        </View>
-      </View>
-    </View>
   );
 };
 
@@ -316,13 +348,34 @@ const styles = StyleSheet.create({
   },
   itemDesc: {
     fontSize: 12,
-    color: '#666',
-    marginVertical: 5,
+    color: '#666',    marginVertical: 5,
   },
   itemPrice: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#000',
+  },
+  recipeCard: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 10,
+    borderColor: '#ddd',
+    borderWidth: 1,
+  },
+  recipeImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 5,
+  },
+  recipeTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  recipeDesc: {
+    fontSize: 14,
+    color: '#666',
   },
 });
 
